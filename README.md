@@ -50,7 +50,6 @@ To set up the required libraries, you need to include the necessary headers and 
 
 ## Code Breakdown
 
-- `socket.cpp`: Contains the main logic for creating and managing sockets.
 - `server.cpp`: Implements the server-side code to accept and handle client connections.
 - `client.cpp`: Implements the client-side code to connect to the server and send/receive data.
 
