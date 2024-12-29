@@ -1,13 +1,11 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <Windows.h>
-#include <tchar.h>
 #include <iostream>
-#include <string>
 #include <thread>
+#include <string>
 
 using namespace std;
-
 #pragma comment(lib, "ws2_32.lib")
 
 string key = "GroupOfFour";
@@ -20,25 +18,40 @@ string xorEncryptDecrypt(const string& input) {
     return output;
 }
 
-void receiveMessages(SOCKET serverSocket) {
+void receiveMessages(SOCKET clientSocket) {
     char buffer[512];
     while (true) {
-        int bytes = recv(serverSocket, buffer, sizeof(buffer), 0);
+        int bytes = recv(clientSocket, buffer, sizeof(buffer), 0);
         if (bytes <= 0) {
             cout << "Disconnected from server. Error: " << WSAGetLastError() << endl;
-            closesocket(serverSocket);
+            closesocket(clientSocket);
             WSACleanup();
             exit(1);
         }
-        else {
-            string encryptedMessage(buffer, bytes);
-            string message = xorEncryptDecrypt(encryptedMessage);
-            cout << "Received: " << message << endl;
-        }
+        string encryptedMessage(buffer, bytes);
+        string message = xorEncryptDecrypt(encryptedMessage);
+        cout << "Server: " << message << endl;
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    string serverIpAddress = "127.0.0.1"; // Default server IP address
+    int port = 443; // Default port
+    string clientIpAddress = "127.0.0.5"; // Default client IP address (bind to any available interface)
+
+    if (argc > 1) {
+        serverIpAddress = argv[1];
+    }
+    if (argc > 2) {
+        port = stoi(argv[2]);
+    }
+    if (argc > 3) {
+        clientIpAddress = argv[3];
+    }
+    if (argc > 4) {
+        key = argv[4];
+    }
+
     WSADATA wsaData;
     int wsaerr;
     WORD Version = MAKEWORD(2, 2);
@@ -49,51 +62,56 @@ int main() {
         return 1;
     }
 
-    SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (serverSocket == INVALID_SOCKET) {
+    SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (clientSocket == INVALID_SOCKET) {
         cout << "ERROR AT SOCKET(): " << WSAGetLastError() << endl;
+        WSACleanup();
+        return 1;
+    }
+
+    sockaddr_in clientAddr;
+    clientAddr.sin_family = AF_INET;
+    InetPtonA(AF_INET, clientIpAddress.c_str(), &clientAddr.sin_addr);
+    clientAddr.sin_port = 0; // Let the system choose any available port
+
+    if (bind(clientSocket, (sockaddr*)&clientAddr, sizeof(clientAddr)) == SOCKET_ERROR) {
+        cout << "bind() failed. Error code: " << WSAGetLastError() << endl;
+        closesocket(clientSocket);
         WSACleanup();
         return 1;
     }
 
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(443);
-    InetPton(AF_INET, _T("127.0.0.1"), &serverAddr.sin_addr);
+    InetPtonA(AF_INET, serverIpAddress.c_str(), &serverAddr.sin_addr);
+    serverAddr.sin_port = htons(port);
 
-    if (connect(serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        cout << "Failed to connect to server. Error: " << WSAGetLastError() << endl;
-        closesocket(serverSocket);
+    if (connect(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        cout << "connect() failed. Error code: " << WSAGetLastError() << endl;
+        closesocket(clientSocket);
         WSACleanup();
         return 1;
     }
 
-    cout << "Connected to server!" << endl;
+    cout << "Connected to server at " << serverIpAddress << ":" << port << endl;
 
-    thread receiveThread(receiveMessages, serverSocket);
+    thread receiveThread(receiveMessages, clientSocket);
     receiveThread.detach();
+
+    string username;
+    cout << "Enter your username: ";
+    getline(cin, username);
+    string encryptedUsername = xorEncryptDecrypt(username);
+    send(clientSocket, encryptedUsername.c_str(), encryptedUsername.size(), 0);
 
     while (true) {
         string message;
         getline(cin, message);
-
-        if (message == "exit") {
-            break;
-        }
-
-        if (message == "LIST") {
-            string encryptedMessage = xorEncryptDecrypt(message);
-            send(serverSocket, encryptedMessage.c_str(), encryptedMessage.size(), 0);
-        }
-        else {
-            cout << "Enter target client and message (format: ClientX:message): ";
-            getline(cin, message);
-            string encryptedMessage = xorEncryptDecrypt(message);
-            send(serverSocket, encryptedMessage.c_str(), encryptedMessage.size(), 0);
-        }
+        string encryptedMessage = xorEncryptDecrypt(message);
+        send(clientSocket, encryptedMessage.c_str(), encryptedMessage.size(), 0);
     }
 
-    closesocket(serverSocket);
+    closesocket(clientSocket);
     WSACleanup();
     return 0;
 }
