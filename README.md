@@ -1,76 +1,76 @@
-# Network Sockets in Windows
+# Encrypted Multi-Client Chat Server
 
-Welcome to the Network Sockets in Windows repository. This project demonstrates the basics of socket programming on the Windows platform using C++.
+This project implements a multi-client chat server using C++ and Winsock2 for Windows systems. The server allows authenticated communication between clients and provides several administrative commands for enhanced functionality and control.
 
-## Overview
+## Features
 
-Socket programming is essential for network communication. This repository includes examples and explanations of how to create, bind, listen, and accept connections using Windows sockets.
+- **Multi-Client Support:** Handle multiple clients simultaneously using threads.
+- **Encrypted Communication:** Messages are encrypted and decrypted using an XOR-based encryption algorithm.
+- **Administrative Commands:** Support for user management, including muting, unmuting, kicking users, and broadcasting messages.
+- **Command List:**
+  - `LIST` - Lists all connected clients.
+  - `BROADCAST:<message>` - Sends a broadcast message to all clients.
+  - `WHISPER:<username>:<message>` - Sends a private message to a specific user.
+  - `CHANGEUSERNAME:<new_username>` - Changes the user's display name.
+  - `SHUTDOWN` - Shuts down the server (admin only).
+  - `KICK:<username>` - Removes a user from the server (admin only).
+  - `MUTE:<username>` - Mutes a user (admin only).
+  - `UNMUTE:<username>` - Unmutes a user (admin only).
+  
+## Requirements
 
-## Prerequisites
+- **Windows OS**
+- **Compiler:** Visual Studio or any compatible C++ compiler that supports Winsock2.
+- **Libraries:**
+  - Winsock2 (`ws2_32.lib`)
 
-- Visual Studio installed
-- Basic knowledge of C++
-- Windows SDK (included with Visual Studio)
+## Installation
 
-## Getting Started
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/kumailzaidi23/Network-Sockets
+   cd Network-Sockets
+   ```
 
-### Cloning the Repository
+2. Open the project in your preferred C++ IDE (e.g., Visual Studio).
+
+3. Build and compile the project.
+
+## Usage
+
+### Starting the Server
+
+Run the server executable from the command line:
 
 ```bash
-git clone https://github.com/kumailzaidi23/Network-Sockets.git
-cd Network-Sockets
+TCPServer.exe [ipAddress] [port] [encryptionKey]
 ```
 
-## Setting Up Your Environment
-1. Open the cloned repository in Visual Studio.
-2. Ensure you have the necessary libraries and headers for Windows socket programming.
+- `ipAddress`: The IP address to bind the server (default is `127.0.0.1`).
+- `port`: The port number to listen for connections (default is `443`).
+- `encryptionKey`: The encryption key for message encryption (default is `GroupOfFour`).
 
-## Installing Required Libraries
-To set up the required libraries, you need to include the necessary headers and link the appropriate library in your project. The key headers and library needed are:
-```cpp
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-#include <Windows.h>
+### Example
 
-#pragma comment(lib, "ws2_32.lib")
+```bash
+TCPServer.exe 127.0.0.1 443 MySecretKey
 ```
-## Configuring Visual Studio
 
-**Include Directories**: Make sure the directories containing `WinSock2.h`, `WS2tcpip.h`, and `Windows.h` are included in your project. These headers are typically found in the Windows SDK.
+## Security
 
-**Linker Settings**: Link against the `ws2_32.lib` library. You can do this in Visual Studio by:
-- Right-clicking on your project in Solution Explorer and selecting `Properties`.
-- Navigating to `Configuration Properties` > `Linker` > `Input`.
-- Adding `ws2_32.lib` to the `Additional Dependencies` field.
+- **Encryption:** The XOR encryption algorithm is used for message security.
+- **Admin Commands:** The `admin` user has access to privileged commands such as server shutdown and user management.
 
-## Running the Example
+## Known Issues
 
-- Build the project by selecting `Build` > `Build Solution` in Visual Studio.
-- Run the executable. It will create a socket, bind it to a port, and start listening for incoming connections.
-
-## Code Breakdown
-
-- `server.cpp`: Implements the server-side code to accept and handle client connections.
-- `client.cpp`: Implements the client-side code to connect to the server and send/receive data.
-
-## Key Functions
-
-- `socket()`: Creates a socket.
-- `bind()`: Binds the socket to a local IP address and port.
-- `listen()`: Listens for incoming connections.
-- `accept()`: Accepts an incoming connection from a client.
-- `send()`: Sends data through the socket.
-- `recv()`: Receives data from the socket.
-
-## References
-
-- [Microsoft Windows Sockets 2 Documentation](https://docs.microsoft.com/en-us/windows/win32/winsock/windows-sockets-start-page-2)
-- [Beej's Guide to Network Programming](http://beej.us/guide/bgnet/)
+- The XOR encryption used is simple and may not provide strong security.
+- The server does not currently implement advanced error handling for all scenarios.
 
 ## Contributing
 
-Feel free to fork this repository and submit pull requests for any improvements or additional features.
+Contributions are welcome! Please fork the repository and submit a pull request for any improvements or feature suggestions.
 
-## License
+## Contact
 
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+For questions or support, please contact [kkomailzaidi23@gmail.com].
+
